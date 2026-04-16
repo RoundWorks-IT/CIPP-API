@@ -5,11 +5,15 @@ function Set-CIPPDBCacheIntunePolicies {
 
     .PARAMETER TenantFilter
         The tenant to cache Intune policies for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
@@ -33,6 +37,10 @@ function Set-CIPPDBCacheIntunePolicies {
             @{ Type = 'DeviceEnrollmentConfigurations'; Uri = '/deviceManagement/deviceEnrollmentConfigurations?$top=999'; FetchAssignments = $true }
             @{ Type = 'DeviceManagementScripts'; Uri = '/deviceManagement/deviceManagementScripts?$top=999&$expand=assignments' }
             @{ Type = 'MobileApps'; Uri = '/deviceAppManagement/mobileApps?$top=999&$select=id,displayName,description,publisher,isAssigned,createdDateTime,lastModifiedDateTime'; FetchAssignments = $true }
+            @{ Type = 'WindowsDriverUpdateProfiles'; Uri = '/deviceManagement/windowsDriverUpdateProfiles?$top=200&$expand=assignments' }
+            @{ Type = 'WindowsFeatureUpdateProfiles'; Uri = '/deviceManagement/windowsFeatureUpdateProfiles?$top=200&$expand=assignments' }
+            @{ Type = 'WindowsQualityUpdatePolicies'; Uri = '/deviceManagement/windowsQualityUpdatePolicies?$top=200&$expand=assignments' }
+            @{ Type = 'WindowsQualityUpdateProfiles'; Uri = '/deviceManagement/windowsQualityUpdateProfiles?$top=200&$expand=assignments' }
         )
 
         # Build bulk requests for all policy types

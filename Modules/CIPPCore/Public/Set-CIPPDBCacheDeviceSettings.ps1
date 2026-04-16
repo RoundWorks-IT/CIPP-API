@@ -5,11 +5,15 @@ function Set-CIPPDBCacheDeviceSettings {
 
     .PARAMETER TenantFilter
         The tenant to cache device settings for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
@@ -17,6 +21,7 @@ function Set-CIPPDBCacheDeviceSettings {
 
         $DeviceSettings = New-GraphGetRequest -uri 'https://graph.microsoft.com/beta/directory/deviceLocalCredentials' -tenantid $TenantFilter
         Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'DeviceSettings' -Data @($DeviceSettings)
+        Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'DeviceSettings' -Data @($DeviceSettings) -Count
         $DeviceSettings = $null
 
         Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Cached device settings successfully' -sev Debug

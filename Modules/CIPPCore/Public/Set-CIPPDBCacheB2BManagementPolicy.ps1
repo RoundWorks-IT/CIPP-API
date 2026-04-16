@@ -5,11 +5,15 @@ function Set-CIPPDBCacheB2BManagementPolicy {
 
     .PARAMETER TenantFilter
         The tenant to cache B2B management policy for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
@@ -20,6 +24,7 @@ function Set-CIPPDBCacheB2BManagementPolicy {
 
         if ($B2BManagementPolicy) {
             Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'B2BManagementPolicy' -Data @($B2BManagementPolicy)
+            Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'B2BManagementPolicy' -Data @($B2BManagementPolicy) -Count
             Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Cached B2B management policy successfully' -sev Debug
         } else {
             Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'No B2B management policy found' -sev Debug

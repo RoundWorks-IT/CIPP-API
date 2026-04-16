@@ -5,11 +5,15 @@ function Set-CIPPDBCacheOrganization {
 
     .PARAMETER TenantFilter
         The tenant to cache organization data for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
@@ -17,6 +21,7 @@ function Set-CIPPDBCacheOrganization {
 
         $Organization = New-GraphGetRequest -uri 'https://graph.microsoft.com/beta/organization' -tenantid $TenantFilter
         Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'Organization' -Data $Organization
+        Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'Organization' -Data $Organization -Count
         $Organization = $null
 
         Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Cached organization data successfully' -sev Debug

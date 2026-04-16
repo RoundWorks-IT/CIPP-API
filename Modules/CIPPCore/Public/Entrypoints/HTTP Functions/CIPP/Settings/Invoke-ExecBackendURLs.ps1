@@ -13,14 +13,19 @@ function Invoke-ExecBackendURLs {
     # Write to the Azure Functions log stream.
     Write-Host 'PowerShell HTTP trigger function processed a request.'
 
-    $Owner = $env:WEBSITE_OWNER_NAME
-    if ($env:WEBSITE_SKU -ne 'FlexConsumption' -and $Owner -match '^(?<SubscriptionId>[^+]+)\+(?<RGName>[^-]+(?:-[^-]+)*?)(?:-[^-]+webspace(?:-Linux)?)?$') {
-        $RGName = $Matches.RGName
-    } else {
+    if ($env:WEBSITE_RESOURCE_GROUP) {
         $RGName = $env:WEBSITE_RESOURCE_GROUP
+    } else {
+        $Owner = $env:WEBSITE_OWNER_NAME
+        if ($env:WEBSITE_SKU -ne 'FlexConsumption' -and $Owner -match '^(?<SubscriptionId>[^+]+)\+(?<RGName>[^-]+(?:-[^-]+)*?)(?:-[^-]+webspace(?:-Linux)?)?$') {
+            $RGName = $Matches.RGName
+        } else {
+            Write-Information "Could not determine resource group from environment variables. Owner: $Owner"
+            $RGName = $null
+        }
     }
 
-    $results = [PSCustomObject]@{
+    $results = @{
         ResourceGroup      = "https://portal.azure.com/#@/resource/subscriptions/$Subscription/resourceGroups/$RGName/overview"
         KeyVault           = "https://portal.azure.com/#@/resource/subscriptions/$Subscription/resourceGroups/$RGName/providers/Microsoft.KeyVault/vaults/$($env:WEBSITE_SITE_NAME)/secrets"
         FunctionApp        = "https://portal.azure.com/#@/resource/subscriptions/$Subscription/resourceGroups/$RGName/providers/Microsoft.Web/sites/$($env:WEBSITE_SITE_NAME)/appServices"
@@ -35,10 +40,11 @@ function Invoke-ExecBackendURLs {
         Hosted             = $env:CIPP_HOSTED -eq 'true' ?? $false
         OS                 = $IsLinux ? 'Linux' : 'Windows'
         SKU                = $env:WEBSITE_SKU
-        Timezone           = $env:WEBSITE_TIME_ZONE ?? 'UTC'
-        BusinessHoursStart = $env:CIPP_BUSINESS_HOURS_START ?? '09:00'
-        BusinessHoursEnd   = $env:CIPP_BUSINESS_HOURS_END ?? '17:00'
     }
+
+    $ConfigTable = Get-CIPPTable -tablename Config
+    $TimeSettings = Get-CIPPAzDataTableEntity @ConfigTable -Filter "PartitionKey eq 'TimeSettings' and RowKey eq 'TimeSettings'"
+    $results.Timezone = $TimeSettings.Timezone ?? 'UTC'
 
 
     $body = @{Results = $Results }

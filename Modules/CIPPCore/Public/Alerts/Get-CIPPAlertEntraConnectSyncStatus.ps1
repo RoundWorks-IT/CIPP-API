@@ -36,8 +36,7 @@ function Get-CIPPAlertEntraConnectSyncStatus {
             }
         }
     } catch {
-        Write-AlertMessage -tenant $($TenantFilter) -message "Could not get Entra Connect Sync Status for $($TenantFilter): $(Get-NormalizedError -message $_.Exception.message)" -LogData (Get-CippException -Exception $_)
-        Write-Information "Could not get Entra Connect Sync Status for $($TenantFilter): $(Get-NormalizedError -message $_.Exception.message)"
-        Write-Information $_.PositionMessage
+        $ErrorMessage = Get-CippException -Exception $_
+        Write-LogMessage -API 'Alerts' -tenant $TenantFilter -message "Could not get Entra Connect Sync Status for $($TenantFilter): $($ErrorMessage.NormalizedError)" -sev Error -LogData $ErrorMessage
     }
 }

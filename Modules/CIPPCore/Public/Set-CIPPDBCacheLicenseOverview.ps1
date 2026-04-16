@@ -5,11 +5,15 @@ function Set-CIPPDBCacheLicenseOverview {
 
     .PARAMETER TenantFilter
         The tenant to cache license overview for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
@@ -17,6 +21,7 @@ function Set-CIPPDBCacheLicenseOverview {
 
         $LicenseOverview = Get-CIPPLicenseOverview -TenantFilter $TenantFilter
         Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'LicenseOverview' -Data @($LicenseOverview)
+        Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'LicenseOverview' -Data @($LicenseOverview) -Count
         $LicenseOverview = $null
 
         Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Cached license overview successfully' -sev Debug

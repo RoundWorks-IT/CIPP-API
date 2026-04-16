@@ -5,17 +5,22 @@ function Set-CIPPDBCacheAdminConsentRequestPolicy {
 
     .PARAMETER TenantFilter
         The tenant to cache consent policy for
+
+    .PARAMETER QueueId
+        The queue ID to update with total tasks (optional)
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TenantFilter
+        [string]$TenantFilter,
+        [string]$QueueId
     )
 
     try {
         Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Caching admin consent request policy' -sev Debug
         $ConsentPolicy = New-GraphGetRequest -uri 'https://graph.microsoft.com/beta/policies/adminConsentRequestPolicy' -tenantid $TenantFilter
         Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'AdminConsentRequestPolicy' -Data @($ConsentPolicy)
+        Add-CIPPDbItem -TenantFilter $TenantFilter -Type 'AdminConsentRequestPolicy' -Data @($ConsentPolicy) -Count
         $ConsentPolicy = $null
 
         Write-LogMessage -API 'CIPPDBCache' -tenant $TenantFilter -message 'Cached admin consent request policy successfully' -sev Debug

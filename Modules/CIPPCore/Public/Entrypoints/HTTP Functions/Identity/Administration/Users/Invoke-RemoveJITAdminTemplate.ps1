@@ -13,13 +13,14 @@ function Invoke-RemoveJITAdminTemplate {
 
     try {
         $ID = $Request.Query.ID ?? $Request.Body.ID
-        
+
         if ([string]::IsNullOrWhiteSpace($ID)) {
             throw 'ID is required'
         }
 
         $Table = Get-CippTable -tablename 'templates'
-        $Filter = "PartitionKey eq 'JITAdminTemplate' and RowKey eq '$ID'"
+        $SafeID = ConvertTo-CIPPODataFilterValue -Value $ID -Type Guid
+        $Filter = "PartitionKey eq 'JITAdminTemplate' and RowKey eq '$SafeID'"
         $Template = Get-CIPPAzDataTableEntity @Table -Filter $Filter
 
         if ($Template) {
@@ -29,7 +30,7 @@ function Invoke-RemoveJITAdminTemplate {
             $StatusCode = [HttpStatusCode]::OK
         } else {
             $Result = "JIT Admin Template with ID $ID not found"
-            Write-LogMessage -headers $Headers -API $APIName -message $Result -Sev 'Warning'
+            Write-LogMessage -headers $Headers -API $APIName -message $Result -sev 'Warn'
             $StatusCode = [HttpStatusCode]::NotFound
         }
 

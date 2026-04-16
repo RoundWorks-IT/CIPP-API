@@ -67,7 +67,18 @@ function Invoke-CIPPStandardAutopilotStatusPage {
         $StateIsCorrect = $false
     }
 
-    $CurrentValue = $CurrentConfig | Select-Object -Property id, displayName, priority, showInstallationProgress, blockDeviceSetupRetryByUser, allowDeviceResetOnInstallFailure, allowLogCollectionOnInstallFailure, customErrorMessage, installProgressTimeoutInMinutes, allowDeviceUseOnInstallFailure, trackInstallProgressForAutopilotOnly, installQualityUpdates
+    $CurrentValue = [PSCustomObject]@{
+        installProgressTimeoutInMinutes      = $CurrentConfig.installProgressTimeoutInMinutes
+        customErrorMessage                   = $CurrentConfig.customErrorMessage
+        showInstallationProgress             = $CurrentConfig.showInstallationProgress
+        allowLogCollectionOnInstallFailure   = $CurrentConfig.allowLogCollectionOnInstallFailure
+        trackInstallProgressForAutopilotOnly = $CurrentConfig.trackInstallProgressForAutopilotOnly
+        blockDeviceSetupRetryByUser          = $CurrentConfig.blockDeviceSetupRetryByUser
+        installQualityUpdates                = $CurrentConfig.installQualityUpdates
+        allowDeviceResetOnInstallFailure     = $CurrentConfig.allowDeviceResetOnInstallFailure
+        allowDeviceUseOnInstallFailure       = $CurrentConfig.allowDeviceUseOnInstallFailure
+    }
+
     $ExpectedValue = [PSCustomObject]@{
         installProgressTimeoutInMinutes      = $Settings.TimeOutInMinutes
         customErrorMessage                   = $Settings.ErrorMessage
@@ -82,22 +93,29 @@ function Invoke-CIPPStandardAutopilotStatusPage {
 
     # Remediate if the state is not correct
     if ($Settings.remediate -eq $true) {
-        try {
-            $Parameters = @{
-                TenantFilter          = $Tenant
-                ShowProgress          = $Settings.ShowProgress
-                BlockDevice           = $Settings.BlockDevice
-                InstallWindowsUpdates = $InstallWindowsUpdates
-                AllowReset            = $Settings.AllowReset
-                EnableLog             = $Settings.EnableLog
-                ErrorMessage          = $Settings.ErrorMessage
-                TimeOutInMinutes      = $Settings.TimeOutInMinutes
-                AllowFail             = $Settings.AllowFail
-                OBEEOnly              = $Settings.OBEEOnly
-            }
+        if ($StateIsCorrect -eq $true) {
+            Write-LogMessage -API 'Standards' -tenant $Tenant -message 'Autopilot Enrollment Status Page is already configured correctly.' -sev Info
+        } else {
+            try {
+                $Parameters = @{
+                    TenantFilter          = $Tenant
+                    ShowProgress          = $Settings.ShowProgress
+                    BlockDevice           = $Settings.BlockDevice
+                    InstallWindowsUpdates = $InstallWindowsUpdates
+                    AllowReset            = $Settings.AllowReset
+                    EnableLog             = $Settings.EnableLog
+                    ErrorMessage          = $Settings.ErrorMessage
+                    TimeOutInMinutes      = $Settings.TimeOutInMinutes
+                    AllowFail             = $Settings.AllowFail
+                    OBEEOnly              = $Settings.OBEEOnly
+                }
 
-            Set-CIPPDefaultAPEnrollment @Parameters
-        } catch {
+                Set-CIPPDefaultAPEnrollment @Parameters
+                Write-LogMessage -API 'Standards' -tenant $Tenant -message 'Autopilot Enrollment Status Page settings have been updated.' -sev Info
+            } catch {
+                $ErrorMessage = Get-CippException -Exception $_
+                Write-LogMessage -API 'Standards' -tenant $Tenant -message "Failed to update Autopilot Enrollment Status Page: $($ErrorMessage.NormalizedError)" -sev Error -LogData $ErrorMessage
+            }
         }
     }
 
